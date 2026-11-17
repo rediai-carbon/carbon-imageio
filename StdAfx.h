@@ -6,5 +6,6 @@
 
 #include <csetjmp>
 #include <cmath>
+#include <cstring>
 #include <memory>
 #include <limits>

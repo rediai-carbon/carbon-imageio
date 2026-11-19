@@ -57,6 +57,24 @@
       "hidden": true
     },
     {
+      "name": "linux",
+      "inherits": "common",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
+      "hidden": true
+    },
+    {
+      "name": "x64-linux",
+      "inherits": "linux",
+      "cacheVariables": {
+        "VCPKG_CHAINLOAD_TOOLCHAIN_FILE": "${sourceDir}/vendor/github.com/carbonengine/vcpkg-registry/toolchains/x64-linux-carbon.cmake"
+      },
+      "hidden": true
+    },
+    {
       "name": "x64-osx",
       "inherits": "osx",
       "cacheVariables": {
@@ -162,6 +180,15 @@
         "CMAKE_BUILD_TYPE": "Debug",
         "VCPKG_TARGET_TRIPLET": "x64-osx-debug",
         "VCPKG_HOST_TRIPLET": "x64-osx-debug"
+      }
+    },
+    {
+      "name": "x64-linux-release",
+      "inherits": "x64-linux",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "VCPKG_TARGET_TRIPLET": "x64-linux-release",
+        "VCPKG_HOST_TRIPLET": "x64-linux-release"
       }
     },
     {

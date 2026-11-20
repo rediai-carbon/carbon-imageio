@@ -14,7 +14,6 @@ ccp_add_library(CcpImageIO STATIC
         HostBitmap.cpp
         ImageIOResult.cpp
         ImageUtility.cpp
-		NanoVdbSupport.cpp
         PsdHandler.cpp
         StdAfx.cpp
         Tr2BmpHandler.cpp
@@ -53,11 +52,16 @@ set_target_properties(CcpImageIO PROPERTIES POSITION_INDEPENDENT_CODE ON EXPORT_
 
 target_precompile_headers(CcpImageIO PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
+option(CARBON_IMAGEIO_WITH_NANOVDB "Build the NanoVDB rasterizer. Requires OpenVDB." ON)
+
 find_package(libjpeg-turbo CONFIG REQUIRED)
 find_package(PNG CONFIG REQUIRED)
 find_package(zlib REQUIRED)
 find_package(carbon-core CONFIG REQUIRED)
-find_package(OpenVDB REQUIRED)
+if(CARBON_IMAGEIO_WITH_NANOVDB)
+    target_sources(CcpImageIO PRIVATE NanoVdbSupport.cpp)
+    find_package(OpenVDB REQUIRED)
+endif()
 
 target_include_directories(CcpImageIO
     PUBLIC
@@ -70,8 +74,10 @@ target_link_libraries(CcpImageIO PUBLIC
         $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>
         PNG::PNG
         ZLIB::ZLIB
-        OpenVDB::openvdb
 )
+if(CARBON_IMAGEIO_WITH_NANOVDB)
+    target_link_libraries(CcpImageIO PUBLIC OpenVDB::openvdb)
+endif()
 
 target_compile_options(CcpImageIO PRIVATE "${MATH_OPTIMIZE_FLAG}")
 

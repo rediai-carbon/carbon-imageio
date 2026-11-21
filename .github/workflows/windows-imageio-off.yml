@@ -13,7 +13,7 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  CARBON_CORE_REF: bed595e3925be7660cb779276ac2e1e2d456c99a
+  CARBON_CORE_REF: a258b314b21dc7547a87c2c6db7105e4e45db7d7
 
 jobs:
   imageio-off-package:

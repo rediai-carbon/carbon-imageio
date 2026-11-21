@@ -1,0 +1,56 @@
+name: windows-imageio-off
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: windows-imageio-off-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARBON_CORE_REF: bed595e3925be7660cb779276ac2e1e2d456c99a
+
+jobs:
+  imageio-off-package:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          path: carbon-imageio
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          repository: rediai-carbon/carbon-core
+          ref: ${{ env.CARBON_CORE_REF }}
+          path: carbon-core
+      - name: Install zlib/png/jpeg
+        shell: pwsh
+        run: |
+          git clone --depth 1 https://github.com/microsoft/vcpkg $env:RUNNER_TEMP\vcpkg
+          & $env:RUNNER_TEMP\vcpkg\bootstrap-vcpkg.bat
+          & $env:RUNNER_TEMP\vcpkg\vcpkg install zlib:x64-windows libpng:x64-windows libjpeg-turbo:x64-windows
+      - name: Build core prefix
+        shell: pwsh
+        run: |
+          $p = "$env:RUNNER_TEMP\core-prefix"
+          $z = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
+          cmake -S carbon-core -B "$env:RUNNER_TEMP\core-build" -G Ninja `
+            -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$p `
+            -DCMAKE_PREFIX_PATH=$z -DCMAKE_CXX_STANDARD=17 `
+            -DWITH_TELEMETRY=OFF -DBUILD_TESTING=OFF -DVCPKG_MANIFEST_MODE=OFF
+          cmake --build "$env:RUNNER_TEMP\core-build" --target install
+          echo "CORE_PREFIX=$p" >> $env:GITHUB_ENV
+      - name: ImageIO OFF verify
+        shell: pwsh
+        working-directory: carbon-imageio
+        env:
+          CARBON_CORE_PREFIX: ${{ env.CORE_PREFIX }}
+        run: |
+          $z = "$env:RUNNER_TEMP\vcpkg\installed\x64-windows"
+          $env:CMAKE_PREFIX_PATH = "$env:CORE_PREFIX;$z"
+          ./scripts/ci/windows_imageio_off.ps1

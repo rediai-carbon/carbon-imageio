@@ -107,10 +107,14 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         # Install rule for available public headers
         install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
 
+        set(IMAGEIO_MONOLITH_DEPS JPEG PNG ZLIB)
+        if(CARBON_IMAGEIO_WITH_NANOVDB)
+            list(APPEND IMAGEIO_MONOLITH_DEPS NanoVDB)
+        endif()
         configure_ccp_vendor_config_file(
             TARGET CcpImageIO
             DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/carbon-imageioConfig.cmake"
-            DEPENDENCIES JPEG PNG ZLIB NanoVDB
+            DEPENDENCIES ${IMAGEIO_MONOLITH_DEPS}
         )
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/carbon-imageioConfig.cmake DESTINATION .)
     else ()

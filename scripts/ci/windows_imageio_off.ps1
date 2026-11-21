@@ -15,7 +15,7 @@ cmake --build (Join-Path $env:RUNNER_TEMP "io-build") --target install
 
 $config = Join-Path $Prefix "share\carbon-imageio\carbon-imageioConfig.cmake"
 $text = Get-Content $config -Raw
-if ($text -match "OpenVDB") { throw "OFF config must not require OpenVDB" }
+if ($text -match '(?m)^find_dependency\(OpenVDB') { throw "OFF config must not unconditionally require OpenVDB" }
 if ($text -match "zlib-ng") { throw "OFF config must not require zlib-ng" }
 
 $consumer = Join-Path $env:RUNNER_TEMP "consumer"
@@ -30,6 +30,7 @@ target_link_libraries(app PRIVATE CcpImageIO)
 Set-Content (Join-Path $consumer "main.cpp") "int main(){return 0;}"
 cmake -S $consumer -B (Join-Path $consumer "build") -G Ninja -DCMAKE_PREFIX_PATH="$corePrefix;$Prefix"
 cmake --build (Join-Path $consumer "build")
+if ($LASTEXITCODE -ne 0) { throw "consumer link failed" }
 
 # Legacy monolith config generation (configure only)
 cmake -S $Root -B (Join-Path $env:RUNNER_TEMP "io-monolith-cfg") -G Ninja `

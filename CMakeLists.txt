@@ -53,7 +53,7 @@ target_precompile_headers(CcpImageIO PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.
 
 option(CARBON_IMAGEIO_WITH_NANOVDB "Build the NanoVDB rasterizer. Requires OpenVDB." ON)
 
-find_package(libjpeg-turbo CONFIG REQUIRED)
+find_package(JPEG REQUIRED)
 find_package(PNG CONFIG REQUIRED)
 find_package(zlib REQUIRED)
 find_package(carbon-core CONFIG REQUIRED)
@@ -69,17 +69,9 @@ target_include_directories(CcpImageIO
         $<INSTALL_INTERFACE:include>
 )
 
-if(TARGET libjpeg-turbo::turbojpeg)
-    set(CARBON_IMAGEIO_JPEG_TARGET libjpeg-turbo::turbojpeg)
-elseif(TARGET libjpeg-turbo::turbojpeg-static)
-    set(CARBON_IMAGEIO_JPEG_TARGET libjpeg-turbo::turbojpeg-static)
-else()
-    message(FATAL_ERROR "libjpeg-turbo did not provide turbojpeg or turbojpeg-static")
-endif()
-
 target_link_libraries(CcpImageIO PUBLIC
         CcpCore
-        ${CARBON_IMAGEIO_JPEG_TARGET}
+        JPEG::JPEG
         PNG::PNG
         ZLIB::ZLIB
 )

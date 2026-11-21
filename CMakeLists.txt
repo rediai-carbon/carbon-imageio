@@ -32,7 +32,6 @@ set(PUBLIC_HEADER_FILES
     include/HostBitmap.h
     include/ImageIOResult.h
     include/ImageUtility.h
-    include/NanoVdbSupport.h
     include/PixelFormat.h
     include/PsdHandler.h
     include/TextureType.h
@@ -60,6 +59,7 @@ find_package(zlib REQUIRED)
 find_package(carbon-core CONFIG REQUIRED)
 if(CARBON_IMAGEIO_WITH_NANOVDB)
     target_sources(CcpImageIO PRIVATE NanoVdbSupport.cpp)
+    list(APPEND PUBLIC_HEADER_FILES include/NanoVdbSupport.h)
     find_package(OpenVDB REQUIRED)
 endif()
 

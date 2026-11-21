@@ -4,10 +4,13 @@ $Prefix = Join-Path $env:RUNNER_TEMP "io-prefix"
 $corePrefix = $env:CARBON_CORE_PREFIX
 if (-not $corePrefix) { throw "CARBON_CORE_PREFIX required" }
 
+$cmakePrefix = $corePrefix
+if ($env:CMAKE_PREFIX_PATH) { $cmakePrefix = $env:CMAKE_PREFIX_PATH }
+
 cmake -S $Root -B (Join-Path $env:RUNNER_TEMP "io-build") -G Ninja `
   -DCMAKE_BUILD_TYPE=Release `
-  -DCMAKE_INSTALL_PREFIX=$Prefix `
-  -DCMAKE_PREFIX_PATH=$corePrefix `
+  -DCMAKE_INSTALL_PREFIX="$Prefix" `
+  -DCMAKE_PREFIX_PATH="$cmakePrefix" `
   -DCMAKE_CXX_STANDARD=17 `
   -DCARBON_IMAGEIO_WITH_NANOVDB=OFF `
   -DBUILD_TESTING=OFF
@@ -28,7 +31,7 @@ add_executable(app main.cpp)
 target_link_libraries(app PRIVATE CcpImageIO)
 '@ | Set-Content (Join-Path $consumer "CMakeLists.txt")
 Set-Content (Join-Path $consumer "main.cpp") "int main(){return 0;}"
-cmake -S $consumer -B (Join-Path $consumer "build") -G Ninja -DCMAKE_PREFIX_PATH="$corePrefix;$Prefix"
+cmake -S $consumer -B (Join-Path $consumer "build") -G Ninja -DCMAKE_PREFIX_PATH="$cmakePrefix;$Prefix"
 cmake --build (Join-Path $consumer "build")
 if ($LASTEXITCODE -ne 0) { throw "consumer link failed" }
 

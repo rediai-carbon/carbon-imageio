@@ -14,7 +14,6 @@ ccp_add_library(CcpImageIO STATIC
         HostBitmap.cpp
         ImageIOResult.cpp
         ImageUtility.cpp
-		NanoVdbSupport.cpp
         PsdHandler.cpp
         StdAfx.cpp
         Tr2BmpHandler.cpp
@@ -33,7 +32,6 @@ set(PUBLIC_HEADER_FILES
     include/HostBitmap.h
     include/ImageIOResult.h
     include/ImageUtility.h
-    include/NanoVdbSupport.h
     include/PixelFormat.h
     include/PsdHandler.h
     include/TextureType.h
@@ -53,11 +51,17 @@ set_target_properties(CcpImageIO PROPERTIES POSITION_INDEPENDENT_CODE ON EXPORT_
 
 target_precompile_headers(CcpImageIO PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/StdAfx.h)
 
-find_package(libjpeg-turbo CONFIG REQUIRED)
+option(CARBON_IMAGEIO_WITH_NANOVDB "Build the NanoVDB rasterizer. Requires OpenVDB." ON)
+
+find_package(JPEG REQUIRED)
 find_package(PNG CONFIG REQUIRED)
 find_package(zlib REQUIRED)
 find_package(carbon-core CONFIG REQUIRED)
-find_package(OpenVDB REQUIRED)
+if(CARBON_IMAGEIO_WITH_NANOVDB)
+    target_sources(CcpImageIO PRIVATE NanoVdbSupport.cpp)
+    list(APPEND PUBLIC_HEADER_FILES include/NanoVdbSupport.h)
+    find_package(OpenVDB REQUIRED)
+endif()
 
 target_include_directories(CcpImageIO
     PUBLIC
@@ -67,11 +71,13 @@ target_include_directories(CcpImageIO
 
 target_link_libraries(CcpImageIO PUBLIC
         CcpCore
-        $<IF:$<TARGET_EXISTS:libjpeg-turbo::turbojpeg>,libjpeg-turbo::turbojpeg,libjpeg-turbo::turbojpeg-static>
+        JPEG::JPEG
         PNG::PNG
         ZLIB::ZLIB
-        OpenVDB::openvdb
 )
+if(CARBON_IMAGEIO_WITH_NANOVDB)
+    target_link_libraries(CcpImageIO PUBLIC OpenVDB::openvdb)
+endif()
 
 target_compile_options(CcpImageIO PRIVATE "${MATH_OPTIMIZE_FLAG}")
 
@@ -101,10 +107,14 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
         # Install rule for available public headers
         install(FILES ${PUBLIC_HEADER_FILES} DESTINATION include)
 
+        set(IMAGEIO_MONOLITH_DEPS JPEG PNG ZLIB)
+        if(CARBON_IMAGEIO_WITH_NANOVDB)
+            list(APPEND IMAGEIO_MONOLITH_DEPS NanoVDB)
+        endif()
         configure_ccp_vendor_config_file(
             TARGET CcpImageIO
             DESTINATION "${CMAKE_CURRENT_BINARY_DIR}/carbon-imageioConfig.cmake"
-            DEPENDENCIES JPEG PNG ZLIB NanoVDB
+            DEPENDENCIES ${IMAGEIO_MONOLITH_DEPS}
         )
         install(FILES ${CMAKE_CURRENT_BINARY_DIR}/carbon-imageioConfig.cmake DESTINATION .)
     else ()

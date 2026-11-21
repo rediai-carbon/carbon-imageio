@@ -20,7 +20,8 @@ if ($LASTEXITCODE -ne 0) { throw "imageio install failed ($LASTEXITCODE)" }
 
 $config = Join-Path $Prefix "share\carbon-imageio\carbon-imageioConfig.cmake"
 $text = Get-Content $config -Raw
-if ($text -match '(?m)^find_dependency\(OpenVDB') { throw "OFF config must not unconditionally require OpenVDB" }
+if ($text -match '(?s)if\(ON\).*find_dependency\(OpenVDB') { throw "OFF config must not enable OpenVDB" }
+if ($text -notmatch '(?s)if\(OFF\).*find_dependency\(OpenVDB') { throw "OFF config must gate OpenVDB behind if(OFF)" }
 if ($text -match "zlib-ng") { throw "OFF config must not require zlib-ng" }
 
 $consumer = Join-Path $env:RUNNER_TEMP "consumer"

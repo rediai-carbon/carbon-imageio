@@ -3,7 +3,7 @@
 include(CMakeFindDependencyMacro)
 
 find_dependency(PNG CONFIG REQUIRED)
-find_dependency(libjpeg-turbo CONFIG REQUIRED)
+find_dependency(JPEG REQUIRED)
 find_dependency(ZLIB REQUIRED)
 if(@CARBON_IMAGEIO_WITH_NANOVDB@)
 find_dependency(OpenVDB REQUIRED)

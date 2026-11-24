@@ -51,4 +51,4 @@ target_compile_definitions(ImageIOTest PRIVATE BLUEBUILD)
 
 set_target_properties(ImageIOTest PROPERTIES FOLDER "Tests")
 
-gtest_discover_tests(ImageIOTest myListOfTests)
+gtest_discover_tests(ImageIOTest)

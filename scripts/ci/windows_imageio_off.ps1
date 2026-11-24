@@ -13,10 +13,12 @@ cmake -S $Root -B (Join-Path $env:RUNNER_TEMP "io-build") -G Ninja `
   "-DCMAKE_PREFIX_PATH=$cmakePrefix" `
   -DCMAKE_CXX_STANDARD=17 `
   -DCARBON_IMAGEIO_WITH_NANOVDB=OFF `
-  -DBUILD_TESTING=OFF
+  -DBUILD_TESTING=ON
 if ($LASTEXITCODE -ne 0) { throw "imageio configure failed ($LASTEXITCODE)" }
 cmake --build (Join-Path $env:RUNNER_TEMP "io-build") --target install
 if ($LASTEXITCODE -ne 0) { throw "imageio install failed ($LASTEXITCODE)" }
+ctest --test-dir (Join-Path $env:RUNNER_TEMP "io-build") --output-on-failure
+if ($LASTEXITCODE -ne 0) { throw "imageio tests failed ($LASTEXITCODE)" }
 
 $config = Join-Path $Prefix "share\carbon-imageio\carbon-imageioConfig.cmake"
 $text = Get-Content $config -Raw
@@ -24,20 +26,20 @@ if ($text -match '(?s)if\(ON\).*find_dependency\(OpenVDB') { throw "OFF config m
 if ($text -notmatch '(?s)if\(OFF\).*find_dependency\(OpenVDB') { throw "OFF config must gate OpenVDB behind if(OFF)" }
 if ($text -match "zlib-ng") { throw "OFF config must not require zlib-ng" }
 
-$consumer = Join-Path $env:RUNNER_TEMP "consumer"
-New-Item -ItemType Directory -Force -Path $consumer | Out-Null
-@'
-cmake_minimum_required(VERSION 3.19)
-project(io_consumer LANGUAGES CXX)
-find_package(carbon-imageio CONFIG REQUIRED)
-add_executable(app main.cpp)
-target_link_libraries(app PRIVATE CcpImageIO)
-'@ | Set-Content (Join-Path $consumer "CMakeLists.txt")
-Set-Content (Join-Path $consumer "main.cpp") "int main(){return 0;}"
-cmake -S $consumer -B (Join-Path $consumer "build") -G Ninja "-DCMAKE_PREFIX_PATH=$cmakePrefix;$Prefix"
+$consumer = Join-Path $Root "examples\jpeg_png_consumer"
+cmake -S $consumer -B (Join-Path $env:RUNNER_TEMP "consumer-build") -G Ninja `
+  -DCMAKE_BUILD_TYPE=Release `
+  "-DCMAKE_PREFIX_PATH=$cmakePrefix;$Prefix"
 if ($LASTEXITCODE -ne 0) { throw "consumer configure failed ($LASTEXITCODE)" }
-cmake --build (Join-Path $consumer "build")
+cmake --build (Join-Path $env:RUNNER_TEMP "consumer-build")
 if ($LASTEXITCODE -ne 0) { throw "consumer link failed ($LASTEXITCODE)" }
+$consumerExe = Join-Path $env:RUNNER_TEMP "consumer-build\imageio_jpeg_png_consumer.exe"
+$consumerOutput = & $consumerExe
+if ($LASTEXITCODE -ne 0) { throw "consumer execution failed ($LASTEXITCODE): $consumerOutput" }
+if ($consumerOutput -notmatch "IMAGEIO_JPEG_PNG_CONSUMER png=4x3") { throw "consumer did not report the PNG result: $consumerOutput" }
+$dump = dumpbin /DEPENDENTS $consumerExe | Out-String
+if ($dump -match "openvdb|nanovdb") { throw "consumer linked OpenVDB or NanoVDB" }
+Write-Host $consumerOutput
 
 # Legacy monolith config generation (configure only)
 cmake -S $Root -B (Join-Path $env:RUNNER_TEMP "io-monolith-cfg") -G Ninja `

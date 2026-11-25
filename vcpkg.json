@@ -17,23 +17,28 @@
       "version>=": "2.4.0"
     },
     {
-      "name": "openvdb",
-      "version>=": "10.0.0#1",
-      "features": [ "nanovdb-nocuda" ],
-      "default-features": false
-    },
-    {
       "name": "gtest",
       "version>=": "1.16.0",
       "host": true
     }
-
   ],
+  "features": {
+    "nanovdb": {
+      "description": "Optional NanoVDB rasterizer. It is not part of the JPEG/PNG subset.",
+      "dependencies": [
+        {
+          "name": "openvdb",
+          "version>=": "10.0.0#1",
+          "features": [ "nanovdb-nocuda" ],
+          "default-features": false
+        }
+      ]
+    }
+  },
   "overrides": [
     {
       "name": "openexr",
       "version": "3.2.4#0"
     }
   ]
-  
 }

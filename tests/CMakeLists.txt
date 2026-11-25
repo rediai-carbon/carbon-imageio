@@ -51,4 +51,8 @@ target_compile_definitions(ImageIOTest PRIVATE BLUEBUILD)
 
 set_target_properties(ImageIOTest PROPERTIES FOLDER "Tests")
 
-gtest_discover_tests(ImageIOTest myListOfTests)
+if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+    gtest_discover_tests(ImageIOTest DISCOVERY_MODE PRE_TEST)
+else()
+    gtest_discover_tests(ImageIOTest)
+endif()

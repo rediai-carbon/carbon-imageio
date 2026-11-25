@@ -1,3 +1,4 @@
+#define NOMINMAX
 #include <CcpCore.h>
 #include <HostBitmap.h>
 #include <Tr2ImageHandler.h>

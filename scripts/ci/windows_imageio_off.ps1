@@ -6,6 +6,11 @@ if (-not $corePrefix) { throw "CARBON_CORE_PREFIX required" }
 
 $cmakePrefix = $corePrefix
 if ($env:CMAKE_PREFIX_PATH) { $cmakePrefix = $env:CMAKE_PREFIX_PATH }
+$prefixBins = @()
+foreach ($entry in ($cmakePrefix -split ';')) {
+    if ($entry) { $prefixBins += (Join-Path $entry "bin") }
+}
+$env:PATH = (($prefixBins + @($env:PATH)) -join ';')
 
 cmake -S $Root -B (Join-Path $env:RUNNER_TEMP "io-build") -G Ninja `
   -DCMAKE_BUILD_TYPE=Release `
